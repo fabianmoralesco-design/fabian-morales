@@ -1,0 +1,142 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* Estilos para la app con rutas y formularios */
+.app-root {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  color: #222;
+}
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+.nav a {
+  margin: 0 0.5rem;
+  text-decoration: none;
+  color: #0366d6;
+}
+.nav a:hover {
+  text-decoration: underline;
+}
+.app-main {
+  margin-top: 1.5rem;
+}
+.auth-form {
+  max-width: 420px;
+  margin: 1rem auto;
+  padding: 1.25rem;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  text-align: left;
+}
+.auth-form h2 {
+  margin-top: 0;
+}
+.auth-form label {
+  display: block;
+  margin-bottom: 0.75rem;
+}
+.auth-form input {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+  box-sizing: border-box;
+}
+.auth-form button {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #0366d6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.auth-form .error {
+  color: #b00020;
+  margin: 0.5rem 0;
+}
+.home {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* Productos y carrito */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+.product-card {
+  padding: 1rem;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+}
+.product-card .price {
+  color: #0366d6;
+  font-weight: 600;
+}
+.cart-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.cart-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #eee;
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+.cart-item input[type="number"] {
+  width: 64px;
+}
+.cart-summary {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
