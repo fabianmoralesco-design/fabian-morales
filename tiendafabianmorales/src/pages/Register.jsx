@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import '../App.css'
 
 export default function Register() {
@@ -9,8 +10,14 @@ export default function Register() {
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const navigate = useNavigate()
+  const auth = useAuth()
+  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
-  function handleSubmit(e) {
+  useEffect(() => {
+    if (auth?.token || auth?.user) navigate('/')
+  }, [auth, navigate])
+
+  async function handleSubmit(e) {
     e.preventDefault()
     setError('')
     if (!name || !email || !password || !confirm) {
@@ -33,11 +40,23 @@ export default function Register() {
       return
     }
 
-    // Aquí normalmente llamarías a la API para registrar
-    console.log('Register', { name, email, password })
-
-    // Simular registro exitoso
-    navigate('/login')
+    setError('')
+    try {
+      const res = await fetch(`${API_BASE}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      if (res.status === 201) {
+        // Registrado con éxito
+        navigate('/login')
+      } else {
+        const body = await res.json().catch(() => ({}))
+        setError(body.message || `Error en el servidor: ${res.status}`)
+      }
+    } catch (err) {
+      setError('Error de red: ' + err.message)
+    }
   }
 
   return (
@@ -92,4 +111,4 @@ export default function Register() {
       </form>
     </div>
   )
-}
+} 

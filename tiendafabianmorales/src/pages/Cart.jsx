@@ -1,16 +1,37 @@
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
 import '../App.css'
 
 export default function Cart() {
   const { cart, updateQuantity, removeFromCart, clearCart, totalPrice } = useCart()
+  const { token } = useAuth()
   const navigate = useNavigate()
+  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
-  function handleCheckout() {
-    // En un caso real, aquí llamarías a una API para procesar el pago
-    alert('Simulando checkout. Gracias por su compra!')
-    clearCart()
-    navigate('/')
+  async function handleCheckout() {
+    if (!token) {
+      navigate('/login')
+      return
+    }
+    try {
+      const res = await fetch(`${API_BASE}/cart/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        alert(body.message || 'Error al procesar pago')
+        return
+      }
+      const data = await res.json()
+      alert('Compra realizada. Pedido ID: ' + (data.orderId || '—'))
+      clearCart()
+      navigate('/')
+    } catch (err) {
+      console.error(err)
+      alert('Error en el checkout')
+    }
   }
 
   return (
