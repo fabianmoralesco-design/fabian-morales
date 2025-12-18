@@ -42,7 +42,10 @@ app.post('/login', async (req, res) => {
 
     const payload = { id: user.id, email: user.email, role: user.role || 'user' };
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
-    res.json({ message: 'Login successful', token });
+    // devolver perfil sin password para que el cliente no tenga que pedir /user inmediatamente
+    const [profileRows] = await pool.promise().query('SELECT id, email, role, name FROM usuarios WHERE id = ? LIMIT 1', [user.id]);
+    const profile = (profileRows && profileRows[0]) ? profileRows[0] : { id: user.id, email: user.email, role: user.role || 'user' };
+    res.json({ message: 'Login successful', token, user: profile });
   } catch (error) {
     console.error('Login error:', error && (error.stack || error.message || error));
     if (process.env.NODE_ENV === 'production') {
@@ -55,25 +58,53 @@ app.post('/login', async (req, res) => {
 
 app.post('/register', async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { name, email, password, role } = req.body;
     if (!email || !password) return res.status(400).json({ message: 'Email and password required' });
+
+    // Comprobar si ya existe el email
+    const [exists] = await pool.promise().query('SELECT id FROM `usuarios` WHERE email = ? LIMIT 1', [email]);
+    if (exists && exists.length) return res.status(409).json({ message: 'Email ya registrado' });
+
     const hashed = await bcrypt.hash(password, 10);
     const userRole = role || 'user';
+
+    // Intentar insertar con columna name si existe, y si no existe intentar sin ella
     try {
-      const [rows] = await pool.promise().query('INSERT INTO `usuarios` (`email`, `password`, `role`) VALUES (?, ?, ?)', [email, hashed, userRole]);
-      if (rows.affectedRows > 0) return res.status(201).json({ message: 'Registration successful' });
+      const [rows] = await pool.promise().query('INSERT INTO `usuarios` (`email`, `password`, `role`, `name`) VALUES (?, ?, ?, ?)', [email, hashed, userRole, name || null]);
+      if (rows.affectedRows > 0) return res.status(201).json({ message: 'Registration successful', id: rows.insertId });
       return res.status(400).json({ message: 'Registration failed' });
     } catch (err) {
+      // si la DB no tiene campo `name`, reintentar sin name
       if (err && err.code === 'ER_BAD_FIELD_ERROR') {
-        const [rows2] = await pool.promise().query('INSERT INTO `usuarios` (`email`, `password`) VALUES (?, ?)', [email, hashed]);
-        if (rows2.affectedRows > 0) return res.status(201).json({ message: 'Registration successful' });
+        const [rows2] = await pool.promise().query('INSERT INTO `usuarios` (`email`, `password`, `role`) VALUES (?, ?, ?)', [email, hashed, userRole]);
+        if (rows2.affectedRows > 0) return res.status(201).json({ message: 'Registration successful', id: rows2.insertId });
         return res.status(400).json({ message: 'Registration failed' });
       }
+      // duplicate entry (unique email) fallback
+      if (err && err.code === 'ER_DUP_ENTRY') return res.status(409).json({ message: 'Email ya registrado' });
       throw err;
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).send('Error during registration');
+    console.error('Registration error:', error && (error.stack || error.message || error));
+    if (process.env.NODE_ENV === 'production') {
+      res.status(500).json({ message: 'Error during registration' });
+    } else {
+      res.status(500).json({ message: 'Error during registration', error: error && error.message });
+    }
+  }
+});
+
+// Comprobar disponibilidad de email (GET /check-email?email=...)
+app.get('/check-email', async (req, res) => {
+  try {
+    const email = req.query.email;
+    if (!email) return res.status(400).json({ message: 'Email required' });
+    const [rows] = await pool.promise().query('SELECT id FROM usuarios WHERE email = ? LIMIT 1', [email]);
+    const available = !rows || rows.length === 0;
+    res.json({ available });
+  } catch (err) {
+    console.error('Check-email error:', err && (err.stack || err.message || err));
+    res.status(500).json({ message: 'Error checking email' });
   }
 });
 
@@ -87,7 +118,22 @@ function authenticateToken(req, res, next) {
     req.user = payload; // { id, email, role }
     next();
   });
-}
+} 
+
+// Devuelve el perfil del usuario autenticado (sin password)
+app.get('/user', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user && req.user.id;
+    if (!userId) return res.status(400).json({ message: 'Invalid token payload' });
+    const [rows] = await pool.promise().query('SELECT id, email, role, name FROM usuarios WHERE id = ? LIMIT 1', [userId]);
+    if (!rows || rows.length === 0) return res.status(404).json({ message: 'User not found' });
+    const profile = rows[0];
+    res.json(profile);
+  } catch (err) {
+    console.error('Get /user error:', err && (err.stack || err.message || err));
+    res.status(500).json({ message: 'Error fetching user' });
+  }
+});
 
 // Middleware: authorize by role
 function authorizeRole(...allowedRoles) {
