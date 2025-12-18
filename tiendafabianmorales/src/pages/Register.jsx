@@ -11,11 +11,12 @@ export default function Register() {
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const auth = useAuth()
-  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
   useEffect(() => {
     if (auth?.token || auth?.user) navigate('/')
   }, [auth, navigate])
+
+  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
   const [loading, setLoading] = useState(false)
   const [emailAvailable, setEmailAvailable] = useState(null) // null = unknown, true = available, false = taken
@@ -55,7 +56,7 @@ export default function Register() {
       controller.abort()
       clearTimeout(id)
     }
-  }, [email])
+  }, [email, API_BASE])
 
   async function checkEmailAvailability() {
     const emailRegex = /^\S+@\S+\.\S+$/
@@ -73,7 +74,7 @@ export default function Register() {
       }
       setEmailAvailable(null)
       return null
-    } catch (err) {
+    } catch {
       setEmailAvailable(null)
       return null
     } finally {
@@ -138,7 +139,7 @@ export default function Register() {
               return
             }
           }
-        } catch (loginErr) {
+        } catch {
           // ignoramos error de auto-login, y redirigimos al login manual
         }
         navigate('/login')

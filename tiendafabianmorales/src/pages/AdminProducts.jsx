@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import '../App.css'
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
+
 export default function AdminProducts() {
   const auth = useAuth()
-  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -14,11 +15,7 @@ export default function AdminProducts() {
   const [editingId, setEditingId] = useState(null)
   const [editingForm, setEditingForm] = useState(null)
 
-  useEffect(() => {
-    fetchProducts()
-  }, [])
-
-  async function fetchProducts() {
+  const fetchProducts = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
@@ -31,7 +28,11 @@ export default function AdminProducts() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchProducts()
+  }, [fetchProducts])
 
   function checkAdmin() {
     return auth?.user?.role === 'admin'

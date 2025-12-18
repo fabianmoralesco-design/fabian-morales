@@ -3,6 +3,8 @@ import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import '../App.css'
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
+
 const SAMPLE_PRODUCTS = [
   { id: 1, name: 'Camiseta', price: 19.99, description: 'Camiseta cómoda de algodón' },
   { id: 2, name: 'Pantalón', price: 39.99, description: 'Pantalón casual' },
@@ -31,7 +33,7 @@ export default function Products() {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [API_BASE])
 
   async function handleAdd(p) {
     // if user logged in, try to add to server-side cart

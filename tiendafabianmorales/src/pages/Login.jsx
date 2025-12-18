@@ -64,7 +64,7 @@ export default function Login() {
           headers: { Authorization: `Bearer ${token}` },
         })
         if (profileRes.ok) user = await profileRes.json()
-      } catch (err) {
+      } catch {
         // ignore
       }
 

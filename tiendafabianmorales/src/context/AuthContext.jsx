@@ -1,5 +1,7 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from 'react'
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 const AuthContext = createContext(null)
 
 export function useAuth() {
@@ -9,7 +11,6 @@ export function useAuth() {
 export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [token, setToken] = useState(null)
-  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
 
   useEffect(() => {
     // Cargar token desde localStorage si existe
@@ -45,7 +46,7 @@ export default function AuthProvider({ children }) {
     return () => {
       mounted = false
     }
-  }, [token])
+  }, [token, user])
 
   const login = (authData) => {
     if (!authData) return

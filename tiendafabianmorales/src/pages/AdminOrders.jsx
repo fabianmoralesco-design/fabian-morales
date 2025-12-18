@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import '../App.css'
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
+
 export default function AdminOrders() {
   const auth = useAuth()
-  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -15,13 +16,7 @@ export default function AdminOrders() {
   const [filterUserId, setFilterUserId] = useState('')
   const [toast, setToast] = useState(null)
 
-  useEffect(() => {
-    fetchOrders()
-    // cleanup toast on unmount
-    return () => setToast(null)
-  }, [])
-
-  async function fetchOrders() {
+  const fetchOrders = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
@@ -40,7 +35,13 @@ export default function AdminOrders() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filterStatus, filterUserId, auth])
+
+  useEffect(() => {
+    fetchOrders()
+    // cleanup toast on unmount
+    return () => setToast(null)
+  }, [fetchOrders])
 
   function showToast(msg) {
     setToast(msg)
